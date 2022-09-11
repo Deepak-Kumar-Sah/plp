@@ -1,6 +1,6 @@
 import React,{useState} from 'react';
-import {TableCell,TableHead,Table,TableRow,TableContainer,Paper,TableBody,Box,Grid,Typography,TextField,Button,Checkbox} from '@mui/material';
-import {SentimentSatisfiedAltRounded,ShoppingCart} from '@mui/icons-material';
+import {TableCell,TableHead,Table,TableRow,TableContainer,Paper,TableBody,Box,Grid,Typography,TextField,Button,Checkbox,CircularProgress} from '@mui/material';
+import {SentimentSatisfiedAltRounded,ShoppingCart,CancelRounded} from '@mui/icons-material';
 
 
 // {"id":1,
@@ -11,70 +11,73 @@ import {SentimentSatisfiedAltRounded,ShoppingCart} from '@mui/icons-material';
 // "image":"https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg",
 // "rating":{"rate":3.9,"count":120}}
 
-// dummyjson
-// {"id":1,
-// "title":"iPhone 9",
-// "description":"An apple mobile which is nothing like apple",
-// "price":549,
-// "discountPercentage":12.96,
-// "rating":4.69,
-// "stock":94,
-// "brand":"Apple",
-// "category":"smartphones",
-// "thumbnail":"https://dummyjson.com/image/i/products/1/thumbnail.jpg",
-// "images":["https://dummyjson.com/image/i/products/1/1.jpg",
-// "https://dummyjson.com/image/i/products/1/2.jpg",
-// "https://dummyjson.com/image/i/products/1/3.jpg",
-// "https://dummyjson.com/image/i/products/1/4.jpg",
-// "https://dummyjson.com/image/i/products/1/thumbnail.jpg"]}
-
-
-const Product =({products,rp,category})=>{
+const Product =({products,rp,category,load})=>{
   const [info, setinfo] = useState({
     selectedProduct:[],
     productName:"",
     productPrice:"",
-    productQty:"",
+    productQty:0,
   });
 
   const handleChange = name =>event=>{
     setinfo({...info,[name]:event.target.value})
 };
 const addItemToCart =(item)=>{
-  let Mycart = []
+  if(info.productQty){
+    console.log(info.productQty)
+    console.log("true")
+    let Mycart = []
+    if(typeof window!==undefined){
+        if(localStorage.getItem("cart")){
+          Mycart = JSON.parse(localStorage.getItem("cart"))
+        }
+        Mycart.push({
+            ...item,
+            qty:info.productQty,
+        })
+        localStorage.setItem("cart",JSON.stringify(Mycart))
+  }
+  }else{
+    alert('please first unchecked the box fill the quantity and then check it again')
+  }
+};
+const removeItemFromCart = (productId) =>{
+  console.log("false")
+  let cart = []
   if(typeof window!==undefined){
       if(localStorage.getItem("cart")){
-        Mycart = JSON.parse(localStorage.getItem("cart"))
-      }
-      Mycart.push({
-          ...item,
-          qty:info.productQty,
+          cart= JSON.parse(localStorage.getItem("cart"))
+      } 
+      cart.map((product,i)=>{
+          if(product.id===productId.id){
+              console.log("matched")
+              cart.splice(i,1)
+          }
       })
-      localStorage.setItem("cart",JSON.stringify(Mycart))
+      localStorage.setItem("cart",JSON.stringify(cart))
   }
-}
-  const productCard = (product)=>{
+  return cart;
+};
+const productCard = (product)=>{
     return(
-          <TableRow>
+          <TableRow sx={{}}>
                     <TableCell sx={{}} >
                       <Box
                         component="img"
                         sx={{
                           height: 100,
                           width: 100,
-                          // maxHeight: { xs: 233, md: 167 },
-                          // maxWidth: { xs: 350, md: 250 },
                         }}
                         alt="The house from the offer."
                         src={product.image}
                       />
                     </TableCell>
-                    <TableCell sx={{maxWidth:150}} >
+                    <TableCell sx={{maxWidth:140}} >
                       {product.title}
                     </TableCell>
-                    <TableCell sx={{alignContent:"center"}}>{product.rating.rate}</TableCell>
-                    <TableCell sx={{}}>
-                        <Grid container spacing={2}>
+                    <TableCell sx={{}}>{product.rating.rate}</TableCell>
+                    <TableCell sx={{pl:8,maxWidth:70}}>
+                        <Grid container spacing={2} sx={{}}>
                           <Grid item>
                             {product.rating.count && <SentimentSatisfiedAltRounded sx={{color:"green"}}/>}
                           </Grid>
@@ -82,37 +85,39 @@ const addItemToCart =(item)=>{
                             <Typography sx={{color:"green"}}>In Stock</Typography>
                           </Grid>
                         </Grid>
-                      </TableCell>
+                    </TableCell>
                       <TableCell sx={{}}>{product.price}</TableCell>
-                    <Grid container sx={{justifyContent:"flex-end"}}>
-                      <TableCell sx={{}}>
-                        <Grid container sx={{display:"flex"}} spacing={2}>
-                          <Grid item sx={{minWidth:100,maxWidth:50}}>
-                            <TextField onChange={handleChange("productQty")} sx={{}}></TextField>
+                      <TableCell>
+                      <Grid container sx={{display:"flex",justifyContent:"flex-end"}} spacing={1}>
+                          <Grid item sx={{maxWidth:80}}>
+                            <TextField onChange={handleChange("productQty")} size="small" placeholder="0" sx={{}}></TextField>
                           </Grid>
                           <Grid item>
-                            <Button  sx={{background:"black"}} startIcon={<ShoppingCart sx={{color:"white"}}/>}></Button>
+                            <Button  sx={{background:"black"}} startIcon={<ShoppingCart sx={{color:"white",p:0.5}}/>}></Button>
                           </Grid>
-                          <Checkbox onClick={()=>{
-                            addItemToCart(product)
-                          }}/>
+                          <Checkbox onChange={(event)=>{
+                            event.target.checked?addItemToCart(product):removeItemFromCart(product)
+                          }} />
                         </Grid>
                       </TableCell>
-                    </Grid>
             </TableRow>
     )
-  };
+};
     return(
-      <TableContainer component={Paper} sx={{}}>
-        <p className='text-white text-center'>{JSON.stringify(info)} here password is id from the api {"https://gorest.co.in/public/v2/users"}</p>
+        <>
+        {load && <CircularProgress color="success" />} 
+        {!load && <TableContainer component={Paper} sx={{}}>
               <Table sx={{ minWidth: 650 ,}}>
                 <TableBody>
                   {products.map((product) => (
-                    (rp || category) ? (rp ? (rp==3?(product.rating.rate>=rp ? productCard(product):""):(product.price>=rp ? productCard(product):"")):(product.category==category ? productCard(product):"")):productCard(product)
+                     (rp && category) ?(rp ? (rp==3 ?((product.rating.rate>=rp && product.category==category) ? productCard(product):""):((product.price>=rp && product.category==category) ? productCard(product):"")):""):(rp || category) ? (rp ? (rp==3?(product.rating.rate>=rp ? productCard(product):""):(product.price>=rp ? productCard(product):"")):(product.category==category ? productCard(product):"")):productCard(product)
                   ))}
                 </TableBody>
               </Table>
           </TableContainer>
+          }
+        </>
+      
     )
 }
 export default Product;

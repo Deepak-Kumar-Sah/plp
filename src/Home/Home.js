@@ -1,8 +1,8 @@
 import React,{useState,useEffect} from "react";
-import {Grid,Box,FormControl,InputLabel,MenuItem,Select,Button, Typography,TextField,Table,TableHead,TableRow,TableCell,} from '@mui/material';
+import {Grid,Box,FormControl,InputLabel,MenuItem,Select,Button, Typography,TextField,Table,TableHead,TableRow,TableCell,CircularProgress} from '@mui/material';
 import {Replay} from '@mui/icons-material/';
 import Product from "./Product/Product";
-import {Redirect,Link} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 
 
 const Home =()=>{
@@ -11,6 +11,7 @@ const Home =()=>{
         category:"",
         // searchKey:""
     });
+    const [isLoading, setisLoading] = useState(true);
     const [products, setproducts] = useState([]);
   const handleChange = name =>event=>{
     setvalues({...values,[name]:event.target.value})
@@ -22,23 +23,19 @@ const resetFilters = ()=>{
     })
 }
   const fetchProducts = async ()=>{
-    // const res =await fetch('https://dummyjson.com/products/');
-    const res =await fetch('https://fakestoreapi.com/products',{method:"GET"});
-    const data = await res.json();
-    // console.log(data);
-    setproducts(data);
-    // data.map((item)=>{
-    //     console.log(item.category)
-    // })
+    // console.log("API called!!")
+    const res = await fetch('https://fakestoreapi.com/products');
+    const data = await res.json()
+    setproducts(data)
  }
- 
  useEffect(()=>{
-    fetchProducts();
+    fetchProducts().then(()=>{
+        setisLoading(false)
+    })
 },[])
     return(
         <>
-        <p className='text-white text-center'>{JSON.stringify(values)} here password is id from the api {"https://gorest.co.in/public/v2/users"}</p>
-        <Grid>
+         <Grid>
             <Grid  container sx={{display:"flex"}}>
                 <Grid  container sx={{justifyContent:"space-between"}}>
                     <Grid item>
@@ -63,7 +60,7 @@ const resetFilters = ()=>{
                         <Grid item sm xs={12} sx={{margin:2}}>
                             <Box sx={{minWidth:120 }}>
                                 <FormControl fullWidth>
-                                    <InputLabel >Size</InputLabel>
+                                    <InputLabel >Rate/Price</InputLabel>
                                     <Select
                                     value={values.rp}
                                     label="Rate/Price"
@@ -99,24 +96,24 @@ const resetFilters = ()=>{
                         <Typography variant="h6" sx={{fontWeight:'bold',}}>Image</Typography>
                     </Grid>
                     <Grid item >
-                        <Typography variant="h6" sx={{fontWeight:'bold'}}>Name</Typography>
+                        <Typography variant="h6" sx={{fontWeight:'bold',pl:20}}>Name</Typography>
                     </Grid>
                     <Grid item >
                         <Typography variant="h6" sx={{fontWeight:'bold'}}>Rating</Typography>
                     </Grid>
                     <Grid item >
-                        <Typography variant="h6" sx={{fontWeight:'bold'}}>Stock</Typography>
+                        <Typography variant="h6" sx={{fontWeight:'bold',}}>Stock</Typography>
                     </Grid>
                     <Grid item >
-                        <Typography variant="h6" sx={{fontWeight:'bold'}}>Price</Typography>
+                        <Typography variant="h6" sx={{fontWeight:'bold',pr:40}}>Price</Typography>
                     </Grid>
                     <Grid item >
                         <Typography variant="h6" sx={{fontWeight:'bold'}}>Buy</Typography>
                     </Grid>
                 </Grid>
-                <Product products={products} rp={values.rp} category={values.category}  />
+                <Product products={products} rp={values.rp} category={values.category} load={isLoading}  />
             </Grid>
-        </Grid>
+        </Grid> 
         </>
     )
 }
